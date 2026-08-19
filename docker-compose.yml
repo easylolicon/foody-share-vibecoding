@@ -1,0 +1,21 @@
+name: today-takeout-feed
+
+services:
+  takeout:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: today-takeout-feed
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SQLITE_FILE: /app/data/takeout.sqlite
+      UPLOAD_DIR: /app/uploads
+      MAX_IMAGE_COUNT: ${MAX_IMAGE_COUNT:-3}
+      MAX_IMAGE_BYTES: ${MAX_IMAGE_BYTES:-5242880}
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads

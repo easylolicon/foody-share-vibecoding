@@ -1,0 +1,29 @@
+{
+  "name": "today-takeout-feed",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Anonymous takeout photo sharing feed",
+  "main": "src/server.js",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "jest --runInBand",
+    "test:e2e": "playwright test",
+    "migrate": "node database/run-migrations.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "jest": "^30.0.5",
+    "supertest": "^7.1.4"
+  }
+}

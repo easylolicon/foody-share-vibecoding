@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY,
+  nickname TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  like_count INTEGER NOT NULL DEFAULT 0 CHECK (like_count >= 0),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts (created_at DESC, id DESC);

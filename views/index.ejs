@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>饭搭子｜公司美食分享</title>
+  <link rel="stylesheet" href="/public/css/timeline.css">
+  <style>
+    :root {
+      --bg: oklch(98% 0.004 240);
+      --surface: oklch(100% 0 0);
+      --fg: oklch(20% 0.02 240);
+      --muted: oklch(50% 0.018 240);
+      --border: oklch(90% 0.006 240);
+      --accent: oklch(56% 0.12 170);
+      --accent-hover: oklch(48% 0.12 170);
+      --accent-soft: oklch(94% 0.025 170);
+      --font-display: 'Söhne', 'Avenir Next', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --shadow: 0 14px 38px oklch(20% 0.02 240 / .09);
+    }
+    * { box-sizing: border-box; }
+    html { overflow-x: hidden; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.7 var(--font-body); }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    img { display: block; width: 100%; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 3px solid oklch(56% .12 170 / .34); outline-offset: 3px; }
+    .icon { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .topbar { border-bottom: 1px solid var(--border); background: oklch(98% .004 240 / .92); }
+    .topbar-inner, .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar-inner { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; color: inherit; text-decoration: none; font: 600 19px/1.2 var(--font-display); }
+    .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: var(--fg); color: var(--surface); }
+    .top-note { color: var(--muted); font-size: 13px; }
+
+    .page { padding: 34px 0 72px; }
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0; }
+    h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.35; font-weight: 600; }
+    h2 { margin: 0; font-size: 20px; line-height: 1.35; font-weight: 600; }
+    .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 12px; letter-spacing: .02em; }
+    .intro { max-width: 650px; margin-bottom: 26px; }
+    .intro-copy { margin: 8px 0 0; color: var(--muted); max-width: 58ch; }
+
+    .submit-panel { display: none; }
+    .upload { position: relative; min-height: 210px; overflow: hidden; display: grid; place-items: center; padding: 20px; border: 1px dashed oklch(72% .01 240); border-radius: 12px; background: oklch(97% .004 240); color: var(--muted); cursor: pointer; text-align: center; }
+    .upload:hover { border-color: var(--fg); color: var(--fg); }
+    .upload input { position: absolute; opacity: 0; pointer-events: none; }
+    .upload-preview { position: absolute; inset: 0; height: 100%; object-fit: cover; }
+    .upload-copy { position: relative; z-index: 1; }
+    .upload-copy .icon { display: block; width: 28px; height: 28px; margin: 0 auto 8px; }
+    .upload-copy strong { display: block; color: var(--fg); font-weight: 550; }
+    .upload-copy span { display: block; font-size: 13px; }
+    .submit-fields { display: grid; align-content: center; gap: 12px; }
+    .field-label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; }
+    .field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .char-count { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .copy-input { width: 100%; min-height: 124px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: 0; resize: vertical; background: var(--surface); color: var(--fg); line-height: 1.7; }
+    .copy-input:focus { border-color: var(--accent); }
+    .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .helper { color: var(--muted); font-size: 12px; }
+    .primary-btn, .track-control { min-height: 44px; border: 0; cursor: pointer; }
+    .primary-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 18px; border-radius: 11px; background: var(--accent); color: var(--surface); font-weight: 600; letter-spacing: .02em; }
+    .primary-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .primary-btn:disabled { cursor: not-allowed; opacity: .48; }
+
+    .timeline { margin-top: 44px; }
+    .timeline-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .timeline-note { color: var(--muted); font-size: 12px; }
+    .date-group { margin-top: 30px; }
+    .date-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .date-heading h3 { margin: 0; font-size: 18px; line-height: 1.4; font-weight: 600; }
+    .date-heading span { color: var(--muted); font-size: 12px; }
+    .track-wrap { position: relative; }
+    .card-track { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 300px)); gap: 16px; padding: 2px; }
+    .meal-card { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+    .meal-photo { aspect-ratio: 4 / 3; object-fit: cover; background: var(--border); }
+    .meal-copy { padding: 14px 15px 16px; }
+    .meal-copy p { min-height: 4.8em; margin: 0 0 13px; line-height: 1.7; }
+    .meal-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12px; }
+    .meal-author { color: var(--fg); font-weight: 550; }
+    .track-control { display: none; }
+    .track-control:hover { border-color: var(--fg); }
+    .track-control[data-direction="prev"] { left: -18px; }
+    .track-control[data-direction="next"] { right: -18px; }
+    .source-note { margin: 34px 0 0; color: var(--muted); font-size: 11px; }
+    .source-note a { text-underline-offset: 2px; }
+    .status { min-height: 20px; color: var(--muted); font-size: 12px; }
+    .status.error { color: oklch(48% .14 25); }
+    .floating-add { position: fixed; right: 24px; bottom: 24px; z-index: 10; min-height: 52px; display: inline-flex; align-items: center; gap: 8px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--accent); color: var(--surface); box-shadow: 0 12px 28px oklch(56% .12 170 / .3); font-weight: 650; cursor: pointer; }
+    .floating-add:hover { background: var(--accent-hover); }
+    .publish-dialog { width: min(680px, calc(100% - 28px)); max-height: min(760px, calc(100vh - 40px)); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--fg); box-shadow: 0 28px 80px oklch(20% .02 240 / .28); }
+    .publish-dialog::backdrop { background: oklch(20% .02 240 / .56); backdrop-filter: blur(4px); }
+    .publish-form { display: grid; max-height: min(760px, calc(100vh - 40px)); overflow-y: auto; }
+    .dialog-head, .dialog-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 20px; }
+    .dialog-head { border-bottom: 1px solid var(--border); }
+    .dialog-head h2 { margin: 0; font-size: 21px; }
+    .dialog-close { width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; font-size: 28px; line-height: 1; cursor: pointer; }
+    .dialog-close:hover { background: oklch(96% .004 240); }
+    .dialog-body { display: grid; grid-template-columns: 210px 1fr; gap: 20px; padding: 20px; }
+    .dialog-foot { border-top: 1px solid var(--border); }
+    .dialog-foot .helper { max-width: 320px; }
+
+    @media (max-width: 720px) {
+      .topbar-inner, .page { width: calc(100% - 32px); }
+      .topbar-inner { min-height: 64px; }
+      .top-note { display: none; }
+      .page { padding-top: 26px; }
+      .upload { min-height: 170px; }
+      .timeline { margin-top: 34px; }
+      .timeline-head { display: block; }
+      .timeline-note { display: block; margin-top: 5px; }
+      .date-group { margin-top: 25px; }
+      .card-track { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .meal-copy p { min-height: 0; }
+      .submit-row { align-items: flex-end; }
+      .helper { max-width: 18ch; line-height: 1.5; }
+      .floating-add { right: 16px; bottom: 16px; }
+      .publish-dialog { width: calc(100% - 20px); max-height: calc(100vh - 24px); border-radius: 14px; }
+      .publish-form { max-height: calc(100vh - 24px); }
+      .dialog-body { grid-template-columns: 1fr; gap: 14px; padding: 14px; }
+      .dialog-foot { align-items: flex-end; padding: 14px; }
+      .dialog-foot .helper { max-width: 18ch; }
+      .upload { min-height: 170px; aspect-ratio: auto; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  </svg>
+
+  <header class="topbar" data-od-id="global-header">
+    <div class="topbar-inner"><a class="brand" href="#" data-od-id="brand-home"><span class="brand-mark">饭</span><span>饭搭子</span></a><span class="top-note">把今天吃到的，留给下一个正在纠结的人。</span></div>
+  </header>
+
+  <main class="page" data-od-id="meal-sharing-page">
+    <section class="intro" data-od-id="meal-submit-heading"><p class="eyebrow">公司内部美食分享</p><h1>今天吃了什么？</h1><p class="intro-copy">上传一张照片，写下最真实的一句话。让午饭选择少一点重复，多一点参考。</p></section>
+
+    <section class="timeline" data-od-id="meal-timeline">
+      <div class="timeline-head"><div><p class="eyebrow">分享墙</p><h2>按日期看看大家吃过的</h2></div><span class="timeline-note">按日期浏览全部分享</span></div>
+
+      <div class="date-groups" id="dateGroups"></div>
+      <p class="source-note">内容来自用户上传的今日外卖记录，图片只用于分享与参考。</p>
+    </section>
+  </main>
+
+  <button class="floating-add" id="openPublish" type="button" aria-label="发布今天吃的">
+    <svg class="icon"><use href="#i-plus"/></svg><span>发布</span>
+  </button>
+
+  <dialog class="publish-dialog" id="publishDialog" aria-labelledby="publishTitle">
+    <form method="dialog" class="publish-form" id="publishForm">
+      <div class="dialog-head"><div><p class="eyebrow">分享一顿外卖</p><h2 id="publishTitle">发布今天吃的</h2></div><button class="dialog-close" id="closePublish" type="button" aria-label="关闭">×</button></div>
+      <div class="dialog-body">
+        <label class="upload" data-od-id="meal-photo-upload"><input id="photoInput" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><div class="upload-preview-grid" id="uploadPreviewGrid"></div><span class="upload-copy" id="uploadCopy"><svg class="icon"><use href="#i-image"/></svg><strong>选择外卖图片</strong><span>支持 1-3 张 JPG、PNG 或 WebP</span></span></label>
+        <div class="submit-fields"><div><div class="field-label-row"><label class="field-label" for="nicknameInput">怎么称呼你</label><span class="char-count" id="nicknameCount" aria-live="polite">0/20</span></div><input id="nicknameInput" class="copy-input nickname-input" maxlength="20" placeholder="例如：小林"></div><div><div class="field-label-row"><label class="field-label" for="copyInput">一句话文案</label><span class="char-count" id="copyCount" aria-live="polite">0/100</span></div><textarea id="copyInput" class="copy-input" placeholder="例如：汤底很干净，适合今天想吃热乎的我。" maxlength="100"></textarea></div><div class="status" id="submitStatus" aria-live="polite">选择图片、写一句话并填写昵称后即可提交</div></div>
+      </div>
+      <div class="dialog-foot"><span class="helper">只保留图片、文案和日期，简单一点。</span><button class="primary-btn" id="submitMeal" data-od-id="submit-meal-cta" type="submit" disabled><svg class="icon"><use href="#i-plus"/></svg>提交分享</button></div>
+    </form>
+  </dialog>
+
+  <script src="/public/js/visitor-id.js" defer></script>
+  <script src="/public/js/timeline-feed.js" defer></script>
+</body>
+</html>

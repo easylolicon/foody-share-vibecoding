@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS post_likes (
+  id INTEGER PRIMARY KEY,
+  post_id INTEGER NOT NULL,
+  visitor_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (post_id, visitor_id),
+  FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+);

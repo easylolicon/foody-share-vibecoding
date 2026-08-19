@@ -1,0 +1,14 @@
+node_modules
+.pnpm-store
+data
+uploads
+.git
+.gitignore
+.env
+tests
+docs
+coverage
+playwright-report
+test-results
+*.log
+.DS_Store
