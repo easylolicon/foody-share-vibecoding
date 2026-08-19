@@ -31,9 +31,9 @@ test('publishes three images and likes the new takeout record', async ({ page })
   await expect(like).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('mobile feed uses horizontal date tracks', async ({ page }, testInfo) => {
+test('mobile feed uses horizontal card tracks', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith('mobile'), 'Mobile-only layout assertion');
   await page.goto('/');
-  const overflow = await page.locator('.day-track').first().evaluate((element) => getComputedStyle(element).overflowX);
+  const overflow = await page.locator('.card-track').first().evaluate((element) => getComputedStyle(element).overflowX);
   expect(overflow).toBe('auto');
 });
