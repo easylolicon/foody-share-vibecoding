@@ -2,6 +2,12 @@
 
 一个轻量的外卖图片信息流。用户无需注册即可发布 1-3 张今日外卖图片，其他访客可以浏览和点赞。
 
+## 昵称身份边界
+
+首次打开页面时需要填写不超过 20 个字符的昵称。昵称保存在当前浏览器的 `localStorage`（键名 `takeout-nickname`），后续发布会自动使用，也可以在页面顶部修改。
+
+这是一种免重复填写的客户端身份，不是服务端账户或可信鉴权。发布 API 仍将昵称视为不可信输入并执行非空、长度校验。帖子继续把发布时昵称写入原有 `posts.nickname` 字段，因此已有数据无需迁移，旧客户端的 multipart 请求也保持兼容。
+
 ## 环境要求
 
 - Node.js 22.5+（使用内置 `node:sqlite`）
@@ -52,5 +58,5 @@ docker compose down
 
 - `GET /api/posts?page=1&pageSize=24`
 - `GET /api/posts/:id`
-- `POST /api/posts`，使用 `multipart/form-data`
+- `POST /api/posts`，使用 `multipart/form-data`，字段为 `images`（1-3 张）、`description` 和 `nickname`
 - `POST /api/posts/:id/like`，请求头携带 `x-visitor-id`

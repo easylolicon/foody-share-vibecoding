@@ -26,7 +26,7 @@ test('creates a post from a multipart request', async () => {
   const create = jest.fn().mockResolvedValue(created);
   const app = createApp({
     postService: { create }, likeService: {},
-    upload: (request, _response, next) => { request.files = [{ mimetype: 'image/jpeg' }]; next(); },
+    upload: (request, _response, next) => { request.files = [{ mimetype: 'image/jpeg' }]; request.body = { nickname: '小林', description: '午饭' }; next(); },
   });
   const response = await request(app).post('/api/posts').field('nickname', '小林').field('description', '午饭');
   expect(response.status).toBe(201);

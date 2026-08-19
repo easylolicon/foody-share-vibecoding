@@ -26,9 +26,10 @@ function createPostRouter({ postService, upload }) {
   });
 
   router.post('/', upload, async (request, response) => {
+    const body = request.body || {};
     const post = await postService.create({
-      nickname: request.body.nickname,
-      description: request.body.description,
+      nickname: body.nickname,
+      description: body.description,
       files: request.files || [],
     }, request.get('x-visitor-id') || '');
     response.status(201).json(post);
