@@ -10,12 +10,20 @@ const EXTENSIONS = new Map([
   ['image/webp', '.webp'],
 ]);
 
+function normalizeMimeType(mimetype) {
+  return typeof mimetype === 'string' ? mimetype.split(';', 1)[0].trim().toLowerCase() : '';
+}
+
+function detectImageMimeType(buffer) {
+  if (!Buffer.isBuffer(buffer)) return null;
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'))) return 'image/png';
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return null;
+}
+
 function hasValidSignature(mimetype, buffer) {
-  if (!Buffer.isBuffer(buffer)) return false;
-  if (mimetype === 'image/jpeg') return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-  if (mimetype === 'image/png') return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'));
-  if (mimetype === 'image/webp') return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
-  return false;
+  return normalizeMimeType(mimetype) === detectImageMimeType(buffer);
 }
 
 class LocalStorageProvider extends StorageProvider {
@@ -34,8 +42,9 @@ class LocalStorageProvider extends StorageProvider {
   }
 
   async save(file) {
-    const extension = EXTENSIONS.get(file.mimetype);
-    if (!extension || !hasValidSignature(file.mimetype, file.buffer)) {
+    const mimetype = normalizeMimeType(file && file.mimetype);
+    const extension = EXTENSIONS.get(mimetype);
+    if (!extension || !hasValidSignature(mimetype, file && file.buffer)) {
       throw new ValidationError('图片内容与文件类型不匹配');
     }
 
@@ -61,3 +70,5 @@ class LocalStorageProvider extends StorageProvider {
 
 module.exports = LocalStorageProvider;
 module.exports.hasValidSignature = hasValidSignature;
+module.exports.detectImageMimeType = detectImageMimeType;
+module.exports.normalizeMimeType = normalizeMimeType;
