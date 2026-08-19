@@ -21,6 +21,25 @@ test('rejects a spoofed image MIME type', async () => {
     .rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
 });
 
+test('accepts a valid image signature when the file is larger than 200KB', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'takeout-storage-large-'));
+  const provider = new LocalStorageProvider(dir);
+  const contents = Buffer.alloc(256 * 1024, 0x7a);
+  contents.set([0xff, 0xd8, 0xff], 0);
+
+  const saved = await provider.save({ mimetype: 'IMAGE/JPEG; charset=binary', buffer: contents });
+
+  expect(saved.key).toMatch(/\.jpg$/);
+  await expect(fs.readFile(path.join(dir, saved.key))).resolves.toEqual(contents);
+});
+
+test('rejects a declared type that does not match the detected signature', async () => {
+  const provider = new LocalStorageProvider('/tmp/takeout-storage-mismatch');
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0x00]);
+  await expect(provider.save({ mimetype: 'image/png', buffer: jpeg }))
+    .rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
+});
+
 test('rejects storage keys outside the upload directory', () => {
   const provider = new LocalStorageProvider('/tmp/takeout-storage');
   expect(() => provider.publicUrl('../secret')).toThrow('Invalid storage key');
