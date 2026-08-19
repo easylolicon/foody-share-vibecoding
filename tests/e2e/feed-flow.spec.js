@@ -31,9 +31,9 @@ test('publishes three images and likes the new takeout record', async ({ page })
   await expect(like).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('mobile feed uses horizontal card tracks', async ({ page }, testInfo) => {
+test('mobile feed keeps date cards in a flat grid', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith('mobile'), 'Mobile-only layout assertion');
   await page.goto('/');
-  const overflow = await page.locator('.card-track').first().evaluate((element) => getComputedStyle(element).overflowX);
-  expect(overflow).toBe('auto');
+  const display = await page.locator('.card-track').first().evaluate((element) => getComputedStyle(element).display);
+  expect(display).toBe('grid');
 });
