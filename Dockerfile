@@ -16,6 +16,7 @@ COPY database ./database
 COPY views ./views
 COPY public ./public
 
+RUN test -f /app/src/uploads/upload-middleware.js
 RUN mkdir -p /app/data /app/uploads
 
 EXPOSE 3000
