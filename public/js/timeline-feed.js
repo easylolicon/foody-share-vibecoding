@@ -20,6 +20,7 @@
   const nicknameStorageKey = 'takeout-nickname';
   let selectedFiles = [];
   let posts = [];
+  let stopCarousels = [];
   const storedNickname = (localStorage.getItem(nicknameStorageKey) || '').trim();
   let nickname = storedNickname.length <= 20 ? storedNickname : '';
 
@@ -106,28 +107,46 @@
     const image = el('img', 'meal-photo');
     image.loading = 'lazy';
     const controls = el('div', 'meal-carousel-controls');
-    const previous = el('button', 'meal-carousel-button', '‹');
-    const next = el('button', 'meal-carousel-button', '›');
+    const previous = el('button', 'meal-carousel-button');
+    const next = el('button', 'meal-carousel-button');
     previous.type = 'button'; next.type = 'button';
     previous.setAttribute('aria-label', '上一张图片'); next.setAttribute('aria-label', '下一张图片');
+    previous.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>';
+    next.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg>';
     const dots = el('div', 'meal-carousel-dots');
     let current = 0;
+    let autoplayId;
+    const canAutoplay = post.images.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     post.images.forEach((_image, index) => {
       const dot = el('button', 'meal-carousel-dot');
       dot.type = 'button'; dot.setAttribute('aria-label', `查看第 ${index + 1} 张图片`);
-      dot.addEventListener('click', () => { current = index; render(); });
+      dot.addEventListener('click', () => { current = index; render(); stopAutoplay(); });
       dots.append(dot);
     });
     function render() {
       image.src = post.images[current]?.url || '';
       image.alt = `${post.nickname} 的外卖图片 ${current + 1}`;
-      previous.disabled = current === 0; next.disabled = current === post.images.length - 1;
+      previous.disabled = post.images.length < 2; next.disabled = post.images.length < 2;
       controls.hidden = post.images.length < 2;
       [...dots.children].forEach((dot, index) => dot.setAttribute('aria-current', String(index === current)));
     }
-    previous.addEventListener('click', () => { if (current > 0) { current -= 1; render(); } });
-    next.addEventListener('click', () => { if (current < post.images.length - 1) { current += 1; render(); } });
+    function stopAutoplay() {
+      window.clearInterval(autoplayId);
+      autoplayId = undefined;
+    }
+    stopCarousels.push(stopAutoplay);
+    function startAutoplay() {
+      if (!canAutoplay || autoplayId) return;
+      autoplayId = window.setInterval(() => { current = (current + 1) % post.images.length; render(); }, 4200);
+    }
+    previous.addEventListener('click', () => { current = (current - 1 + post.images.length) % post.images.length; render(); stopAutoplay(); });
+    next.addEventListener('click', () => { current = (current + 1) % post.images.length; render(); stopAutoplay(); });
+    gallery.addEventListener('mouseenter', stopAutoplay);
+    gallery.addEventListener('mouseleave', startAutoplay);
+    gallery.addEventListener('focusin', stopAutoplay);
+    gallery.addEventListener('focusout', (event) => { if (!gallery.contains(event.relatedTarget)) startAutoplay(); });
     controls.append(previous, dots, next); gallery.append(image, controls); render();
+    startAutoplay();
     return gallery;
   }
 
@@ -157,6 +176,8 @@
   }
 
   function renderTimeline() {
+    stopCarousels.forEach((stop) => stop());
+    stopCarousels = [];
     dateGroups.replaceChildren();
     const grouped = new Map();
     posts.forEach((post) => { const key = dateKey(post.createdAt); const list = grouped.get(key) || []; list.push(post); grouped.set(key, list); });
@@ -171,8 +192,18 @@
       const next = el('button', 'track-control'); next.type = 'button'; next.dataset.track = trackId; next.dataset.direction = 'next'; next.setAttribute('aria-label', '查看更晚的分享'); next.innerHTML = '<svg class="icon"><use href="#i-arrow-right"/></svg>';
       const track = el('div', 'card-track'); track.id = trackId; track.tabIndex = 0; track.setAttribute('aria-label', `${key} 的美食分享`);
       items.forEach((post) => track.append(renderCard(post)));
-      prev.addEventListener('click', () => { track.scrollBy({ left: -Math.max(track.clientWidth * .72, 240), behavior: 'smooth' }); track.focus({ preventScroll: true }); });
-      next.addEventListener('click', () => { track.scrollBy({ left: Math.max(track.clientWidth * .72, 240), behavior: 'smooth' }); track.focus({ preventScroll: true }); });
+      function updateTrackControls() {
+        const hasOverflow = track.scrollWidth > track.clientWidth + 1;
+        prev.hidden = !hasOverflow;
+        next.hidden = !hasOverflow;
+        prev.disabled = track.scrollLeft <= 1;
+        next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 1;
+      }
+      prev.addEventListener('click', () => { track.scrollBy({ left: -Math.max(track.clientWidth * .8, 240), behavior: 'smooth' }); });
+      next.addEventListener('click', () => { track.scrollBy({ left: Math.max(track.clientWidth * .8, 240), behavior: 'smooth' }); });
+      track.addEventListener('scroll', updateTrackControls, { passive: true });
+      new ResizeObserver(updateTrackControls).observe(track);
+      requestAnimationFrame(updateTrackControls);
       wrap.append(prev, track, next); group.append(heading, wrap); dateGroups.append(group);
     });
   }
