@@ -8,6 +8,7 @@ const { createUploadMiddleware } = require('../../src/uploads/upload-middleware'
 const errorHandler = require('../../src/middleware/error-handler');
 
 const mismatchedPngFixture = path.join(__dirname, '..', 'fixtures', '123.jpg');
+const fakeJpeg = Buffer.from([0xff, 0xd8, 0xff, 0x70, 0x68, 0x6f, 0x74, 0x6f, 0x00, 0x01, 0x02, 0x03, 0x04]);
 
 function createUploadApp(uploadDir) {
   const app = express();
@@ -36,6 +37,16 @@ test('rejects unrecognized content even when the declared MIME type is allowed',
   const response = await request(createUploadApp(dir))
     .post('/upload')
     .attach('images', Buffer.from('not an image'), { filename: 'fake.jpg', contentType: 'image/jpeg' });
+
+  expect(response.status).toBe(400);
+  expect(response.body.error).toMatchObject({ code: 'VALIDATION_ERROR', message: '图片内容与文件类型不匹配' });
+});
+
+test('rejects a multipart upload with only a forged JPEG prefix', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'takeout-upload-fake-jpeg-'));
+  const response = await request(createUploadApp(dir))
+    .post('/upload')
+    .attach('images', fakeJpeg, { filename: 'fake.jpg', contentType: 'image/jpeg' });
 
   expect(response.status).toBe(400);
   expect(response.body.error).toMatchObject({ code: 'VALIDATION_ERROR', message: '图片内容与文件类型不匹配' });
