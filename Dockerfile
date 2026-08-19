@@ -12,6 +12,7 @@ COPY package.json .npmrc ./
 RUN pnpm install --prod --no-frozen-lockfile
 
 COPY src ./src
+COPY src/uploads ./src/uploads
 COPY database ./database
 COPY views ./views
 COPY public ./public

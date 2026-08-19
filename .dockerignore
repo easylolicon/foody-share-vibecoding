@@ -1,9 +1,7 @@
 /node_modules
 /.pnpm-store
-/data/**
-/uploads/**
-!src/uploads/
-!src/uploads/**
+data/*
+uploads/*
 /.git
 /.gitignore
 /.env
