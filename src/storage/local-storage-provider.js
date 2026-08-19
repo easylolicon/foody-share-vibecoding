@@ -22,10 +22,6 @@ function detectImageMimeType(buffer) {
   return null;
 }
 
-function hasValidSignature(mimetype, buffer) {
-  return normalizeMimeType(mimetype) === detectImageMimeType(buffer);
-}
-
 class LocalStorageProvider extends StorageProvider {
   constructor(uploadDir, publicPrefix = '/uploads') {
     super();
@@ -42,9 +38,9 @@ class LocalStorageProvider extends StorageProvider {
   }
 
   async save(file) {
-    const mimetype = normalizeMimeType(file && file.mimetype);
-    const extension = EXTENSIONS.get(mimetype);
-    if (!extension || !hasValidSignature(mimetype, file && file.buffer)) {
+    const detectedMimeType = detectImageMimeType(file && file.buffer);
+    const extension = EXTENSIONS.get(detectedMimeType);
+    if (!extension) {
       throw new ValidationError('图片内容与文件类型不匹配');
     }
 
@@ -69,6 +65,5 @@ class LocalStorageProvider extends StorageProvider {
 }
 
 module.exports = LocalStorageProvider;
-module.exports.hasValidSignature = hasValidSignature;
 module.exports.detectImageMimeType = detectImageMimeType;
 module.exports.normalizeMimeType = normalizeMimeType;

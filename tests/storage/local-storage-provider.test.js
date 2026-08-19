@@ -3,6 +3,8 @@ const os = require('node:os');
 const path = require('node:path');
 const LocalStorageProvider = require('../../src/storage/local-storage-provider');
 
+const mismatchedPngFixture = path.join(__dirname, '..', 'fixtures', '123.jpg');
+
 test('saves, exposes and deletes an image', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'takeout-storage-'));
   const provider = new LocalStorageProvider(dir);
@@ -33,11 +35,16 @@ test('accepts a valid image signature when the file is larger than 200KB', async
   await expect(fs.readFile(path.join(dir, saved.key))).resolves.toEqual(contents);
 });
 
-test('rejects a declared type that does not match the detected signature', async () => {
-  const provider = new LocalStorageProvider('/tmp/takeout-storage-mismatch');
-  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0x00]);
-  await expect(provider.save({ mimetype: 'image/png', buffer: jpeg }))
-    .rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
+test('stores the supplied JPG-named PNG using its detected PNG extension', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'takeout-storage-mismatched-'));
+  const provider = new LocalStorageProvider(dir);
+  const contents = await fs.readFile(mismatchedPngFixture);
+
+  const saved = await provider.save({ mimetype: 'image/jpeg', buffer: contents });
+
+  expect(contents).toHaveLength(260436);
+  expect(saved.key).toMatch(/\.png$/);
+  await expect(fs.readFile(path.join(dir, saved.key))).resolves.toEqual(contents);
 });
 
 test('rejects storage keys outside the upload directory', () => {

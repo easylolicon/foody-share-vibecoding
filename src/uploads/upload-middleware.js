@@ -1,15 +1,9 @@
 const multer = require('multer');
 const config = require('../config');
-const { ValidationError } = require('../errors');
-const { normalizeMimeType } = require('../storage/local-storage-provider');
-
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 function imageFileFilter(_request, file, callback) {
-  if (!ALLOWED_TYPES.has(normalizeMimeType(file.mimetype))) {
-    callback(new ValidationError('仅支持 JPEG、PNG 或 WebP 图片'));
-    return;
-  }
+  // The client-provided MIME type may be based on the filename extension.
+  // LocalStorageProvider validates the buffered content and determines its type.
   callback(null, true);
 }
 
@@ -23,4 +17,4 @@ function createUploadMiddleware(options = {}) {
   }).array('images', maxImageCount);
 }
 
-module.exports = { ALLOWED_TYPES, createUploadMiddleware, imageFileFilter };
+module.exports = { createUploadMiddleware, imageFileFilter };
