@@ -32,6 +32,9 @@
     .topbar { border-bottom: 1px solid var(--border); background: oklch(98% .004 240 / .92); }
     .topbar-inner, .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
     .topbar-inner { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .identity { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+    .identity-name { color: var(--fg); font-weight: 600; }
+    .identity-edit { min-height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 12px; }
     .brand { display: inline-flex; align-items: center; gap: 11px; color: inherit; text-decoration: none; font: 600 19px/1.2 var(--font-display); }
     .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: var(--fg); color: var(--surface); }
     .top-note { color: var(--muted); font-size: 13px; }
@@ -93,6 +96,12 @@
     .floating-add:hover { background: var(--accent-hover); }
     .publish-dialog { width: min(680px, calc(100% - 28px)); max-height: min(760px, calc(100vh - 40px)); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--fg); box-shadow: 0 28px 80px oklch(20% .02 240 / .28); }
     .publish-dialog::backdrop { background: oklch(20% .02 240 / .56); backdrop-filter: blur(4px); }
+    .login-dialog { width: min(420px, calc(100% - 28px)); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--fg); box-shadow: 0 28px 80px oklch(20% .02 240 / .28); }
+    .login-dialog::backdrop { background: oklch(20% .02 240 / .56); backdrop-filter: blur(4px); }
+    .login-form { padding: 24px; }
+    .login-form h2 { margin: 0 0 6px; }
+    .login-form p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    .login-form .copy-input { min-height: 44px; }
     .publish-form { display: grid; max-height: min(760px, calc(100vh - 40px)); overflow-y: auto; }
     .dialog-head, .dialog-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 20px; }
     .dialog-head { border-bottom: 1px solid var(--border); }
@@ -136,7 +145,7 @@
   </svg>
 
   <header class="topbar" data-od-id="global-header">
-    <div class="topbar-inner"><a class="brand" href="#" data-od-id="brand-home"><span class="brand-mark">饭</span><span>饭搭子</span></a><span class="top-note">把今天吃到的，留给下一个正在纠结的人。</span></div>
+    <div class="topbar-inner"><a class="brand" href="#" data-od-id="brand-home"><span class="brand-mark">饭</span><span>饭搭子</span></a><div class="identity"><span>你好，<span class="identity-name" id="identityName"></span></span><button class="identity-edit" id="editIdentity" type="button">修改昵称</button></div><span class="top-note">把今天吃到的，留给下一个正在纠结的人。</span></div>
   </header>
 
   <main class="page" data-od-id="meal-sharing-page">
@@ -159,9 +168,20 @@
       <div class="dialog-head"><div><p class="eyebrow">分享一顿外卖</p><h2 id="publishTitle">发布今天吃的</h2></div><button class="dialog-close" id="closePublish" type="button" aria-label="关闭">×</button></div>
       <div class="dialog-body">
         <label class="upload" data-od-id="meal-photo-upload"><input id="photoInput" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple><div class="upload-preview-grid" id="uploadPreviewGrid"></div><span class="upload-copy" id="uploadCopy"><svg class="icon"><use href="#i-image"/></svg><strong>选择外卖图片</strong><span>支持 1-3 张 JPG、PNG 或 WebP</span></span></label>
-        <div class="submit-fields"><div><div class="field-label-row"><label class="field-label" for="nicknameInput">怎么称呼你</label><span class="char-count" id="nicknameCount" aria-live="polite">0/20</span></div><input id="nicknameInput" class="copy-input nickname-input" maxlength="20" placeholder="例如：小林"></div><div><div class="field-label-row"><label class="field-label" for="copyInput">一句话文案</label><span class="char-count" id="copyCount" aria-live="polite">0/100</span></div><textarea id="copyInput" class="copy-input" placeholder="例如：汤底很干净，适合今天想吃热乎的我。" maxlength="100"></textarea></div><div class="status" id="submitStatus" aria-live="polite">选择图片、写一句话并填写昵称后即可提交</div></div>
+        <div class="submit-fields"><div><div class="field-label-row"><label class="field-label" for="copyInput">一句话文案</label><span class="char-count" id="copyCount" aria-live="polite">0/100</span></div><textarea id="copyInput" class="copy-input" placeholder="例如：汤底很干净，适合今天想吃热乎的我。" maxlength="100"></textarea></div><div class="status" id="submitStatus" aria-live="polite">选择图片并写一句话后即可提交</div></div>
       </div>
       <div class="dialog-foot"><span class="helper">只保留图片、文案和日期，简单一点。</span><button class="primary-btn" id="submitMeal" data-od-id="submit-meal-cta" type="submit" disabled><svg class="icon"><use href="#i-plus"/></svg>提交分享</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="login-dialog" id="loginDialog" aria-labelledby="loginTitle">
+    <form method="dialog" class="login-form" id="loginForm">
+      <p class="eyebrow">第一次来饭搭子</p><h2 id="loginTitle">先告诉大家怎么称呼你</h2>
+      <p>昵称会保存在当前浏览器中，之后发布时自动使用。</p>
+      <label class="field-label" for="loginNickname">昵称</label>
+      <input id="loginNickname" class="copy-input" maxlength="20" autocomplete="nickname" placeholder="例如：小林" required>
+      <div class="status" id="loginStatus" aria-live="polite"></div>
+      <button class="primary-btn" id="loginSubmit" type="submit" style="width:100%;margin-top:12px">进入分享墙</button>
     </form>
   </dialog>
 

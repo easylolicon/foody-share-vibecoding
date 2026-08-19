@@ -2,19 +2,26 @@
   const dateGroups = document.querySelector('#dateGroups');
   const photoInput = document.querySelector('#photoInput');
   const copyInput = document.querySelector('#copyInput');
-  const nicknameInput = document.querySelector('#nicknameInput');
   const previewGrid = document.querySelector('#uploadPreviewGrid');
   const uploadCopy = document.querySelector('#uploadCopy');
   const submitButton = document.querySelector('#submitMeal');
   const submitStatus = document.querySelector('#submitStatus');
-  const nicknameCount = document.querySelector('#nicknameCount');
   const copyCount = document.querySelector('#copyCount');
   const publishDialog = document.querySelector('#publishDialog');
   const publishForm = document.querySelector('#publishForm');
   const openPublish = document.querySelector('#openPublish');
   const closePublish = document.querySelector('#closePublish');
+  const loginDialog = document.querySelector('#loginDialog');
+  const loginForm = document.querySelector('#loginForm');
+  const loginNickname = document.querySelector('#loginNickname');
+  const loginStatus = document.querySelector('#loginStatus');
+  const identityName = document.querySelector('#identityName');
+  const editIdentity = document.querySelector('#editIdentity');
+  const nicknameStorageKey = 'takeout-nickname';
   let selectedFiles = [];
   let posts = [];
+  const storedNickname = (localStorage.getItem(nicknameStorageKey) || '').trim();
+  let nickname = storedNickname.length <= 20 ? storedNickname : '';
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -44,12 +51,38 @@
   }
 
   function updateSubmitState() {
-    nicknameCount.textContent = `${nicknameInput.value.length}/20`;
     copyCount.textContent = `${copyInput.value.length}/100`;
-    const ready = selectedFiles.length > 0 && copyInput.value.trim() && nicknameInput.value.trim();
+    const ready = selectedFiles.length > 0 && copyInput.value.trim() && nickname;
     submitButton.disabled = !ready;
-    submitStatus.textContent = ready ? '准备好了，可以提交这条分享。' : '选择图片、写一句话并填写昵称后即可提交';
+    submitStatus.textContent = ready ? `将以 ${nickname} 的昵称发布。` : '选择图片并写一句话后即可提交';
     submitStatus.classList.remove('error');
+  }
+
+  function saveIdentity(value) {
+    const normalized = value.trim();
+    if (!normalized) {
+      loginStatus.textContent = '请输入昵称';
+      loginStatus.classList.add('error');
+      return false;
+    }
+    if (normalized.length > 20) {
+      loginStatus.textContent = '昵称不能超过 20 个字符';
+      loginStatus.classList.add('error');
+      return false;
+    }
+    nickname = normalized;
+    localStorage.setItem(nicknameStorageKey, nickname);
+    identityName.textContent = nickname;
+    loginStatus.textContent = '';
+    loginStatus.classList.remove('error');
+    updateSubmitState();
+    return true;
+  }
+
+  function openIdentityDialog() {
+    loginNickname.value = nickname;
+    loginDialog.showModal();
+    loginNickname.focus();
   }
 
   function renderPreviews() {
@@ -154,21 +187,30 @@
   }
 
   photoInput.addEventListener('change', () => { selectedFiles = [...photoInput.files].slice(0, 3); renderPreviews(); updateSubmitState(); });
-  copyInput.addEventListener('input', updateSubmitState); nicknameInput.addEventListener('input', updateSubmitState);
-  openPublish.addEventListener('click', () => { publishDialog.showModal(); nicknameInput.focus(); });
+  copyInput.addEventListener('input', updateSubmitState);
+  openPublish.addEventListener('click', () => { publishDialog.showModal(); copyInput.focus(); });
   closePublish.addEventListener('click', () => publishDialog.close());
   publishDialog.addEventListener('click', (event) => { if (event.target === publishDialog) publishDialog.close(); });
+  editIdentity.addEventListener('click', openIdentityDialog);
+  loginForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (saveIdentity(loginNickname.value)) loginDialog.close();
+  });
+  loginDialog.addEventListener('cancel', (event) => { if (!nickname) event.preventDefault(); });
   publishForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (submitButton.disabled) return;
     submitButton.disabled = true; submitStatus.textContent = '正在发布...';
-    const data = new FormData(); selectedFiles.forEach((file) => data.append('images', file)); data.append('nickname', nicknameInput.value.trim()); data.append('description', copyInput.value.trim());
+    const data = new FormData(); selectedFiles.forEach((file) => data.append('images', file)); data.append('nickname', nickname); data.append('description', copyInput.value.trim());
     try {
       const response = await fetch('/api/posts', { method: 'POST', headers: { 'x-visitor-id': window.takeoutVisitorId }, body: data });
       const result = await response.json(); if (!response.ok) throw new Error(result.error?.message || '发布失败');
-      posts = [result, ...posts]; renderTimeline(); photoInput.value = ''; selectedFiles = []; copyInput.value = ''; nicknameInput.value = ''; renderPreviews(); submitStatus.textContent = '已发布到今天的分享墙。'; publishDialog.close();
+      posts = [result, ...posts]; renderTimeline(); photoInput.value = ''; selectedFiles = []; copyInput.value = ''; renderPreviews(); submitStatus.textContent = '已发布到今天的分享墙。'; publishDialog.close();
     } catch (error) { submitStatus.textContent = error.message; submitStatus.classList.add('error'); }
     finally { updateSubmitState(); }
   });
-  updateSubmitState(); load();
+  identityName.textContent = nickname;
+  updateSubmitState();
+  load();
+  if (!nickname) openIdentityDialog();
 })();
