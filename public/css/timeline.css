@@ -15,8 +15,13 @@
 .meal-carousel-dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .58); }
 .meal-carousel-dot[aria-current="true"] { background: white; transform: scale(1.25); }
 .meal-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 11px; }
-.meal-like { min-height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--muted); }
-.meal-like[aria-pressed="true"] { border-color: #e6b2aa; color: #ca5548; }
+.meal-like { min-width: 76px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease; }
+.meal-like:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); background: var(--accent-soft); color: var(--accent-hover); transform: translateY(-1px); }
+.meal-like:active:not(:disabled) { transform: translateY(0) scale(.97); }
+.meal-like:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); outline-offset: 2px; }
+.meal-like[aria-pressed="true"] { border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); box-shadow: 0 4px 12px color-mix(in srgb, var(--danger) 16%, transparent); }
+.meal-like[aria-pressed="true"]:hover:not(:disabled) { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 15%, var(--surface)); color: var(--danger); }
+.meal-like:disabled { cursor: wait; opacity: .62; }
 .meal-empty { padding: 40px 0; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .meal-gallery .meal-photo { transition: none; }
