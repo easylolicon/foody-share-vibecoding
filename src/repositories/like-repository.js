@@ -1,4 +1,8 @@
 class LikeRepository {
+  constructor(db) {
+    this.db = db;
+  }
+
   async find(connection, postId, visitorId) {
     const [rows] = await connection.query(
       'SELECT id FROM post_likes WHERE post_id = ? AND visitor_id = ? FOR UPDATE',
@@ -7,8 +11,8 @@ class LikeRepository {
     return rows[0] || null;
   }
 
-  async insert(connection, postId, visitorId) {
-    await connection.query('INSERT INTO post_likes (post_id, visitor_id) VALUES (?, ?)', [postId, visitorId]);
+  async insert(connection, postId, visitorId, nickname) {
+    await connection.query('INSERT INTO post_likes (post_id, visitor_id, nickname) VALUES (?, ?, ?)', [postId, visitorId, nickname]);
     await connection.query('UPDATE posts SET like_count = like_count + 1 WHERE id = ?', [postId]);
   }
 
@@ -26,6 +30,15 @@ class LikeRepository {
       [postId],
     );
     return rows[0] || null;
+  }
+
+  async findByPostId(postId) {
+    const [rows] = await this.db.query(
+      `SELECT nickname, created_at AS createdAt
+       FROM post_likes WHERE post_id = ? ORDER BY created_at DESC, id DESC`,
+      [postId],
+    );
+    return rows;
   }
 }
 

@@ -17,6 +17,9 @@
   const loginStatus = document.querySelector('#loginStatus');
   const identityName = document.querySelector('#identityName');
   const editIdentity = document.querySelector('#editIdentity');
+  const detailDialog = document.querySelector('#detailDialog');
+  const detailContent = document.querySelector('#likeDetail');
+  const closeDetail = document.querySelector('#closeDetail');
   const nicknameStorageKey = 'takeout-nickname';
   let selectedFiles = [];
   let posts = [];
@@ -49,6 +52,37 @@
     const yesterdayKey = dateKey(yesterday);
     const label = key === todayKey ? '今天' : key === yesterdayKey ? '昨天' : `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
     return `${label} · ${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+  }
+
+  function formatDateTime(value) {
+    return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  }
+
+  async function openDetail(post) {
+    detailContent.replaceChildren(el('p', 'like-empty', '正在加载点赞记录...'));
+    detailDialog.showModal();
+    try {
+      const response = await fetch(`/api/posts/${post.id}/likes`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message || '加载点赞记录失败');
+      detailContent.replaceChildren();
+      detailContent.append(el('p', 'like-detail-copy', post.description || '这条分享'));
+      if (!result.items.length) {
+        detailContent.append(el('p', 'like-empty', '还没有人点赞。'));
+        return;
+      }
+      const list = el('ul', 'like-list');
+      result.items.forEach((item) => {
+        const entry = el('li', 'like-entry');
+        const time = el('time', '', formatDateTime(item.createdAt));
+        time.dateTime = item.createdAt;
+        entry.append(el('strong', '', item.nickname), time);
+        list.append(entry);
+      });
+      detailContent.append(list);
+    } catch (error) {
+      detailContent.replaceChildren(el('p', 'like-empty', error.message));
+    }
   }
 
   function updateSubmitState() {
@@ -160,6 +194,12 @@
   function renderCard(post) {
     const card = el('article', 'meal-card');
     card.dataset.postId = post.id;
+    card.tabIndex = 0;
+    card.setAttribute('aria-label', `查看 ${post.nickname} 的点赞详情`);
+    card.addEventListener('click', (event) => { if (!event.target.closest('button')) openDetail(post); });
+    card.addEventListener('keydown', (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target === card) { event.preventDefault(); openDetail(post); }
+    });
     const copy = el('div', 'meal-copy');
     copy.append(el('p', '', post.description || '今天吃了什么'));
     const meta = el('div', 'meal-meta');
@@ -171,10 +211,12 @@
     like.addEventListener('click', async () => {
       like.disabled = true;
       try {
-        const response = await fetch(`/api/posts/${post.id}/like`, { method: 'POST', headers: { 'x-visitor-id': window.takeoutVisitorId } });
+        const response = await fetch(`/api/posts/${post.id}/like`, { method: 'POST', headers: { 'x-visitor-id': window.takeoutVisitorId, 'x-visitor-nickname': encodeURIComponent(nickname) } });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error?.message || '点赞失败');
-        like.textContent = `♥ ${result.likeCount}`; like.setAttribute('aria-pressed', String(result.liked));
+        post.likeCount = result.likeCount;
+        post.liked = result.liked;
+        renderTimeline();
       } catch (error) { submitStatus.textContent = error.message; submitStatus.classList.add('error'); }
       finally { like.disabled = false; }
     });
@@ -198,7 +240,8 @@
       const prev = el('button', 'track-control'); prev.type = 'button'; prev.dataset.track = trackId; prev.dataset.direction = 'prev'; prev.setAttribute('aria-label', '查看更早的分享'); prev.innerHTML = '<svg class="icon"><use href="#i-arrow-left"/></svg>';
       const next = el('button', 'track-control'); next.type = 'button'; next.dataset.track = trackId; next.dataset.direction = 'next'; next.setAttribute('aria-label', '查看更晚的分享'); next.innerHTML = '<svg class="icon"><use href="#i-arrow-right"/></svg>';
       const track = el('div', 'card-track'); track.id = trackId; track.tabIndex = 0; track.setAttribute('aria-label', `${key} 的美食分享`);
-      items.forEach((post) => track.append(renderCard(post)));
+      items.sort((left, right) => right.likeCount - left.likeCount || new Date(right.createdAt) - new Date(left.createdAt) || right.id - left.id)
+        .forEach((post) => track.append(renderCard(post)));
       prev.addEventListener('click', () => { if (track.scrollLeft > 0) track.scrollBy({ left: -Math.max(track.clientWidth * .72, 240), behavior: 'smooth' }); });
       next.addEventListener('click', () => { track.scrollBy({ left: Math.max(track.clientWidth * .72, 240), behavior: 'smooth' }); });
       wrap.append(prev, track, next); group.append(heading, wrap); dateGroups.append(group);
@@ -218,6 +261,8 @@
   copyInput.addEventListener('input', updateSubmitState);
   openPublish.addEventListener('click', () => { publishDialog.showModal(); copyInput.focus(); });
   closePublish.addEventListener('click', () => publishDialog.close());
+  closeDetail.addEventListener('click', () => detailDialog.close());
+  detailDialog.addEventListener('click', (event) => { if (event.target === detailDialog) detailDialog.close(); });
   publishDialog.addEventListener('click', (event) => { if (event.target === publishDialog) publishDialog.close(); });
   editIdentity.addEventListener('click', openIdentityDialog);
   loginForm.addEventListener('submit', (event) => {

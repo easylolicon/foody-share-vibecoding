@@ -98,6 +98,15 @@
     .publish-dialog::backdrop { background: oklch(20% .02 240 / .56); backdrop-filter: blur(4px); }
     .login-dialog { width: min(420px, calc(100% - 28px)); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--fg); box-shadow: 0 28px 80px oklch(20% .02 240 / .28); }
     .login-dialog::backdrop { background: oklch(20% .02 240 / .56); backdrop-filter: blur(4px); }
+    .detail-dialog { width: min(600px, calc(100% - 28px)); max-height: calc(100vh - 40px); padding: 0; border: 0; border-radius: 14px; background: var(--surface); color: var(--fg); box-shadow: 0 28px 80px oklch(20% .02 240 / .28); }
+    .detail-dialog::backdrop { background: oklch(20% .02 240 / .56); backdrop-filter: blur(4px); }
+    .like-detail { padding: 0 20px 20px; }
+    .like-detail-title { margin: 0 0 4px; font-size: 19px; }
+    .like-detail-copy { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+    .like-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+    .like-entry { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--border); }
+    .like-entry strong { font-weight: 600; }
+    .like-entry time, .like-empty { color: var(--muted); font-size: 13px; }
     .login-form { padding: 24px; }
     .login-form h2 { margin: 0 0 6px; }
     .login-form p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
@@ -132,6 +141,7 @@
       .helper { max-width: 18ch; line-height: 1.5; }
       .floating-add { right: 16px; bottom: 16px; }
       .publish-dialog { width: calc(100% - 20px); max-height: calc(100vh - 24px); border-radius: 14px; }
+      .detail-dialog { width: calc(100% - 20px); }
       .publish-form { max-height: calc(100vh - 24px); }
       .dialog-body { grid-template-columns: 1fr; gap: 14px; padding: 14px; }
       .dialog-foot { align-items: flex-end; padding: 14px; }
@@ -187,6 +197,11 @@
       <div class="status" id="loginStatus" aria-live="polite"></div>
       <button class="primary-btn" id="loginSubmit" type="submit" style="width:100%;margin-top:12px">进入分享墙</button>
     </form>
+  </dialog>
+
+  <dialog class="detail-dialog" id="detailDialog" aria-labelledby="detailTitle">
+    <div class="dialog-head"><div><p class="eyebrow">点赞详情</p><h2 id="detailTitle">谁赞过这条分享</h2></div><button class="dialog-close" id="closeDetail" type="button" aria-label="关闭">×</button></div>
+    <div class="like-detail" id="likeDetail" aria-live="polite"></div>
   </dialog>
 
   <script src="/public/js/visitor-id.js" defer></script>

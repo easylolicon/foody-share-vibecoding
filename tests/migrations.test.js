@@ -10,9 +10,11 @@ test('migration files define the required schema contracts', () => {
     '001_create_posts.sql',
     '002_create_post_images.sql',
     '003_create_post_likes.sql',
+    '004_add_post_like_nickname.sql',
   ]);
   expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS posts/i);
   expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS post_images/i);
   expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS post_likes/i);
   expect(sql).toMatch(/UNIQUE\s*\(post_id, visitor_id\)/i);
+  expect(sql).toMatch(/ADD COLUMN nickname/i);
 });
