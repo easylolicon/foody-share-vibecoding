@@ -17,7 +17,7 @@ function createApp(overrides = {}) {
   const db = overrides.db || pool;
   const storage = overrides.storage || new LocalStorageProvider(config.uploadDir);
   const postRepository = overrides.postRepository || new PostRepository(db);
-  const likeRepository = overrides.likeRepository || new LikeRepository();
+  const likeRepository = overrides.likeRepository || new LikeRepository(db);
   const postService = overrides.postService || new PostService({ db, repository: postRepository, storage });
   const likeService = overrides.likeService || new LikeService({ db, repository: likeRepository });
   const upload = overrides.upload || createUploadMiddleware();
@@ -29,7 +29,7 @@ function createApp(overrides = {}) {
   app.use('/uploads', express.static(path.resolve(config.uploadDir), { index: false, fallthrough: false }));
   app.use('/public', express.static(path.join(__dirname, '..', 'public'), { index: false }));
 
-  app.use('/api/posts/:id/like', createLikeRouter({ likeService }));
+  app.use('/api/posts', createLikeRouter({ likeService }));
   app.use('/api/posts', createPostRouter({ postService, upload }));
   app.get('/', (_request, response) => response.render('index'));
   app.use(errorHandler);

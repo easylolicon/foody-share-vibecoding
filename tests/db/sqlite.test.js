@@ -10,7 +10,7 @@ test('creates a local SQLite file and applies migrations idempotently', async ()
   const db = createSqliteDb(filename);
   const migrationsDir = path.join(__dirname, '..', '..', 'database', 'migrations');
 
-  await expect(runMigrations(db, migrationsDir)).resolves.toHaveLength(3);
+  await expect(runMigrations(db, migrationsDir)).resolves.toHaveLength(4);
   await expect(runMigrations(db, migrationsDir)).resolves.toHaveLength(0);
   const [tables] = await db.query("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name");
   expect(tables.map((table) => table.name)).toEqual([

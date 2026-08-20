@@ -8,8 +8,8 @@ test('toggles a new anonymous like', async () => {
     insert: jest.fn(),
   };
   const service = new LikeService({ db: { getConnection: async () => connection }, repository });
-  await expect(service.toggle(1, 'visitor_1234567890')).resolves.toEqual({ liked: true, likeCount: 3 });
-  expect(repository.insert).toHaveBeenCalledWith(connection, 1, 'visitor_1234567890');
+  await expect(service.toggle(1, 'visitor_1234567890', '小林')).resolves.toEqual({ liked: true, likeCount: 3 });
+  expect(repository.insert).toHaveBeenCalledWith(connection, 1, 'visitor_1234567890', '小林');
 });
 
 test('removes an existing anonymous like', async () => {
@@ -20,6 +20,6 @@ test('removes an existing anonymous like', async () => {
     remove: jest.fn(),
   };
   const service = new LikeService({ db: { getConnection: async () => connection }, repository });
-  await expect(service.toggle(1, 'visitor_1234567890')).resolves.toEqual({ liked: false, likeCount: 2 });
+  await expect(service.toggle(1, 'visitor_1234567890', '小林')).resolves.toEqual({ liked: false, likeCount: 2 });
   expect(repository.remove).toHaveBeenCalledWith(connection, 7, 1);
 });
