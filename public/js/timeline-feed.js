@@ -59,14 +59,21 @@
   }
 
   async function openDetail(post) {
-    detailContent.replaceChildren(el('p', 'like-empty', '正在加载点赞记录...'));
+    const gallery = el('div', 'detail-gallery');
+    post.images.forEach((item, index) => {
+      const image = el('img', 'detail-photo');
+      image.src = item.url;
+      image.alt = `${post.nickname} 的外卖图片 ${index + 1}`;
+      image.loading = index === 0 ? 'eager' : 'lazy';
+      gallery.append(image);
+    });
+    detailContent.replaceChildren(gallery, el('p', 'like-empty', '正在加载点赞记录...'));
     detailDialog.showModal();
     try {
       const response = await fetch(`/api/posts/${post.id}/likes`);
       const result = await response.json();
       if (!response.ok) throw new Error(result.error?.message || '加载点赞记录失败');
-      detailContent.replaceChildren();
-      detailContent.append(el('p', 'like-detail-copy', post.description || '这条分享'));
+      detailContent.replaceChildren(gallery, el('p', 'like-detail-copy', post.description || '这条分享'));
       if (!result.items.length) {
         detailContent.append(el('p', 'like-empty', '还没有人点赞。'));
         return;
@@ -81,7 +88,7 @@
       });
       detailContent.append(list);
     } catch (error) {
-      detailContent.replaceChildren(el('p', 'like-empty', error.message));
+      detailContent.replaceChildren(gallery, el('p', 'like-empty', error.message));
     }
   }
 
