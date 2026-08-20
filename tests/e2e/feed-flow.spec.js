@@ -55,6 +55,8 @@ test('shows every like in a card detail view and ranks liked cards first within 
   await likedCard.getByRole('button', { name: '点赞' }).click();
   await likedCard.locator('.meal-copy p').click();
   await expect(page.locator('#detailDialog')).toBeVisible();
+  await expect(page.locator('#likeDetail .detail-photo')).toHaveCount(1);
+  await expect(page.locator('#likeDetail .detail-photo')).toHaveAttribute('src', /\/uploads\//);
   await expect(page.locator('#likeDetail')).toContainText(nickname);
   await page.getByRole('button', { name: '关闭' }).last().click();
   await expect(page.locator('.date-group').first().locator('.meal-card').first()).toContainText('排序高赞');
